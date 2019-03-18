@@ -28,7 +28,13 @@ def register_handle(request):
 
     if allow != 'on':
         return render(request, 'register.html', {'errmsg': '请同意协议'})
+    try:
+        user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        user = None
 
+    if user:
+        return render(request, 'register.html', {'errmsg': '用户名已存在'})
     # 3.进行业务处理：用户注册
     user = User.objects.create_user(username, email, pwd)
     user.is_active = 0
