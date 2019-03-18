@@ -19,8 +19,8 @@ from django.urls import path, include, re_path
 urlpatterns = [
     path('admin/', admin.site.urls),
     re_path('^tinymce/', include('tinymce.urls')),  # 富文本编辑器
-    re_path('^user/', include('user.urls', namespace='user')),  # 用户
-    re_path('^order/', include('order.urls', namespace='order')),  # 订单
-    re_path('^cart/', include('cart.urls', namespace='cart')),  # 购物车
-    re_path('^', include('goods.urls', namespace='goods')),  # 商品
+    re_path('^user/', include('apps.user.urls', namespace='user')),  # 用户
+    re_path('^order/', include('apps.order.urls', namespace='order')),  # 订单
+    re_path('^cart/', include('apps.cart.urls', namespace='cart')),  # 购物车
+    re_path('^', include('apps.goods.urls', namespace='goods')),  # 商品
 ]
