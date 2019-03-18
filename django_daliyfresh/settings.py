@@ -11,9 +11,11 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
+import sys
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(BASE_DIR, 'apps'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
@@ -36,6 +38,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'tinymce',  # 富文本编辑器
+    'user',  # 用户
+    'goods',  # 商品
+    'cart',  # 购物车
+    'order',  # 订单
 ]
 
 MIDDLEWARE = [
@@ -118,7 +124,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'templates')]
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
 # 富文本编辑器
 TINYMCE_DEFAULT_CONFIG = {
