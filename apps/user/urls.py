@@ -11,7 +11,13 @@ urlpatterns = [
     re_path('^register$', RegisterView.as_view(), name='register'),
     re_path('^active/(?P<token>.*)$', ActiveView.as_view(), name='active'),
     re_path('^login$', LoginView.as_view(), name='login'),
-    re_path('^$', login_required(UserInfoView.as_view()), name='user'),
-    re_path('^order$', login_required(UserOrderView.as_view()), name='order'),
-    re_path('^address$', login_required(AddressView.as_view()), name='address'),
+
+    # re_path('^$', login_required(UserInfoView.as_view()), name='user'),
+    # re_path('^order$', login_required(UserOrderView.as_view()), name='order'),
+    # re_path('^address$', login_required(AddressView.as_view()), name='address'),
+
+    re_path('^$', UserInfoView.as_view(), name='user'),
+    re_path('^order$', UserOrderView.as_view(), name='order'),
+    re_path('^address$', AddressView.as_view(), name='address'),
+
 ]

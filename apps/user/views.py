@@ -9,6 +9,9 @@ from django.conf import settings
 from apps.user.models import User
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from itsdangerous import SignatureExpired
+# from utils.mixin import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin
+
 import re
 
 # Create your views here.
@@ -113,7 +116,13 @@ class LoginView(TemplateView):
                 # 记录用户登录状态
                 login(request, user)
 
-                response = redirect(reverse('goods:index'))
+                # 获取用户登录后跳转的地址
+                # next=/user/order
+                # key,default=None
+                # 默认首页
+                next_url = request.GET.get('next',reverse('goods:index'))
+
+                response = redirect(next_url)
 
                 # 判断是否记录用户名
                 remember = request.POST.get('remember')
@@ -123,6 +132,7 @@ class LoginView(TemplateView):
                     response.delete_cookie('username')
 
                 return response
+
             else:
                 return render(request, 'login.html', {'errmsg': '账户未激活'})
         else:
@@ -131,20 +141,20 @@ class LoginView(TemplateView):
 
 # 信息管理
 # /user
-class UserInfoView(TemplateView):
+class UserInfoView(LoginRequiredMixin,TemplateView):
     def get(self, request, *args, **kwargs):
-        return render(request, 'user_center_info.html',{'page':'user'})
+        return render(request, 'user_center_info.html', {'page': 'user'})
 
 
 # 订单管理
 # /user/order
-class UserOrderView(TemplateView):
+class UserOrderView(LoginRequiredMixin,TemplateView):
     def get(self, request, *args, **kwargs):
-        return render(request, 'user_center_order.html',{'page':'order'})
+        return render(request, 'user_center_order.html', {'page': 'order'})
 
 
 # 地址管理
 # /user/address
-class AddressView(TemplateView):
+class AddressView(LoginRequiredMixin,TemplateView):
     def get(self, request, *args, **kwargs):
-        return render(request, 'user_center_site.html',{'page':'address'})
+        return render(request, 'user_center_site.html', {'page': 'address'})
