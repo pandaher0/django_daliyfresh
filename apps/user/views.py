@@ -1,17 +1,21 @@
+from http import cookies
+
+from django.contrib.auth import authenticate, login
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views.generic import TemplateView
 from django.conf import settings
-from django.core.mail import send_mail
 from apps.user.models import User
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from itsdangerous import SignatureExpired
 import re
 
-
 # Create your views here.
 # /user/register
+from celery_task.tasks import send_register_active_email
+
+
 def register(request):
     """显示注册页面"""
     # 判断请求方式
@@ -95,17 +99,11 @@ class RegisterView(TemplateView):
         # 对用户信息进行加密
         serializer = Serializer(settings.SECRET_KEY, 3600)
         info = {'confirm': user.id}
-        token = serializer.dumps(info) # bytes类型
-        token=token.decode('utf8')
+        token = serializer.dumps(info)  # bytes类型
+        token = token.decode('utf8')
 
-        # 发邮件
-        subject = '邮件主题'
-        message = ''
-        sender = settings.EMAIL_FROM
-        receiver = [email]
-        html_msg = '邮件正文<a href="http://127.0.0.1:8000/user/active/%s">http://127.0.0.1:8080/user/active/%s</a>' % (
-        token, token)
-        send_mail(subject, message, sender, receiver,html_message=html_msg)
+        # 使用celery发送邮件
+        send_register_active_email.delay(email, username, token)
 
         # 4.返回应答
         return redirect(reverse('goods:index'))
@@ -133,4 +131,39 @@ class ActiveView(TemplateView):
 
 class LoginView(TemplateView):
     def get(self, request, *args, **kwargs):
-        return render(request, 'login.html')
+        if 'username' in request.COOKIES:
+            username = request.COOKIES.get('username')
+            checked = 'checked'
+        else:
+            username=''
+            checked=''
+
+        return render(request, 'login.html',{'username':username,'checked':checked})
+
+    def post(self, request):
+        username = request.POST.get('username')
+        pwd = request.POST.get('pwd')
+
+        if not all([username, pwd]):
+            return render(request, 'login.html', {'errmsg': '数据不完整'})
+
+        user = authenticate(username=username, password=pwd)
+        if user is not None:
+            if user.is_active:
+                # 记录用户登录状态
+                login(request, user)
+
+                response = redirect(reverse('goods:index'))
+
+                # 判断是否记录用户名
+                remember = request.POST.get('remember')
+                if remember == 'on':
+                    response.set_cookie('username', username, max_age=7 * 24 * 3600)
+                else:
+                    response.delete_cookie('username')
+
+                return response
+            else:
+                return render(request, 'login.html', {'errmsg': '账户未激活'})
+        else:
+            return render(request, 'login.html', {'errmsg': '用户名密码错误'})
