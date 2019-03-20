@@ -1,17 +1,19 @@
 from http import cookies
 
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views.generic import TemplateView
 from django.conf import settings
-from apps.user.models import User
+from apps.user.models import User, Address
+from apps.goods.models import GoodsSKU
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from itsdangerous import SignatureExpired
 # from utils.mixin import LoginRequiredMixin
 from django.contrib.auth.mixins import LoginRequiredMixin
-
+# from redis import StrictRedis
+from django_redis import get_redis_connection
 import re
 
 # Create your views here.
@@ -120,7 +122,7 @@ class LoginView(TemplateView):
                 # next=/user/order
                 # key,default=None
                 # 默认首页
-                next_url = request.GET.get('next',reverse('goods:index'))
+                next_url = request.GET.get('next', reverse('goods:index'))
 
                 response = redirect(next_url)
 
@@ -139,22 +141,84 @@ class LoginView(TemplateView):
             return render(request, 'login.html', {'errmsg': '用户名密码错误'})
 
 
+class LogoutView(TemplateView):
+    def get(self, request, *args, **kwargs):
+        # logout函數清除session
+        logout(request)
+        return redirect(reverse('goods:index'))
+
+
 # 信息管理
 # /user
-class UserInfoView(LoginRequiredMixin,TemplateView):
+class UserInfoView(LoginRequiredMixin, TemplateView):
     def get(self, request, *args, **kwargs):
-        return render(request, 'user_center_info.html', {'page': 'user'})
+        # page = 'user
+        # request.user request对象自动创建实例
+        # 如果未登录 为AnonymousUser实例
+        # 如果已登录，为User实例
+        # request.user.is_authenticated()
+        # 调用is_authenticated方法，登录为True，未登录为False
+        # 并且在向模板文件传递变量时，会将request.user一并传递
+
+        # 获取用户个人信息
+        addr = Address.objects.get_default_addr(request.user)
+
+        # 获取最近浏览
+        # sr = StrictRedis(host='127.0.0.1', port=6379, db=9)
+        con = get_redis_connection('default')
+
+        history_key = 'history_%d' % request.user.id
+        # 获取最近5个商品id
+        sku_ids = con.lrange(history_key, 0, 4)
+        # 从数据库查询商品 无序
+        goods = []
+
+        for id in sku_ids:
+            good = GoodsSKU.objects.get(id=id)
+            goods.append(good)
+
+        return render(request, 'user_center_info.html', {'page': 'user', 'addr': addr,'goods':goods})
 
 
 # 订单管理
 # /user/order
-class UserOrderView(LoginRequiredMixin,TemplateView):
+class UserOrderView(LoginRequiredMixin, TemplateView):
     def get(self, request, *args, **kwargs):
+        # 获取订单信息
+
         return render(request, 'user_center_order.html', {'page': 'order'})
 
 
 # 地址管理
 # /user/address
-class AddressView(LoginRequiredMixin,TemplateView):
+class AddressView(LoginRequiredMixin, TemplateView):
     def get(self, request, *args, **kwargs):
-        return render(request, 'user_center_site.html', {'page': 'address'})
+        address = Address.objects.get_default_addr(request.user)
+        # 获取默认收货地址
+        return render(request, 'user_center_site.html', {'page': 'address', 'addr': address})
+
+    def post(self, request):
+        receiver = request.POST.get('receiver')
+        addr = request.POST.get('addr')
+        zipcode = request.POST.get('zipcode')
+        phone = request.POST.get('phone')
+
+        if not all([receiver, addr, phone]):
+            return render(request, 'user_center_site.html', {'errmsg': '数据不完整'})
+
+        if not re.match(r'^1(3|4|5|7|8)\d{9}$', phone):
+            return render(request, 'user_center_site.html', {'errmsg': '手机号不合法'})
+
+        # 如果已存在默认地址，新添加的不作为默认，否则为默认
+        user = request.user
+        address = Address.objects.get_default_addr(user)
+
+        if address:
+            is_default = False
+        else:
+            is_default = True
+
+        Address.objects.create(user=user, receiver=receiver, addr=addr, zip_code=zipcode, phone=phone,
+                               is_default=is_default)
+
+        return redirect(reverse('user:address'))
