@@ -16,7 +16,7 @@ class GoodsType(BaseModel):
         db_table = 'df_goods_type'
         verbose_name = '商品种类'
         verbose_name_plural = verbose_name
-
+    #
     def __str__(self):
         return self.name
 
@@ -38,6 +38,9 @@ class GoodsSKU(BaseModel):
     sales = models.IntegerField(default=0, verbose_name='商品销量')
     status = models.SmallIntegerField(default=1, choices=status_choices, verbose_name='商品状态')
 
+    def __str__(self):
+        return self.name
+
     class Meta:
         db_table = 'df_goods_sku'
         verbose_name = '商品'
@@ -49,6 +52,9 @@ class Goods(BaseModel):
     name = models.CharField(max_length=20, verbose_name='商品SPU名称')
     # 富文本类型:带有格式的文本
     detail = HTMLField(blank=True, verbose_name='商品详情')
+
+    def __str__(self):
+        return self.name
 
     class Meta:
         db_table = 'df_goods'
@@ -78,6 +84,9 @@ class IndexGoodsBanner(BaseModel):
         verbose_name = '首页轮播商品'
         verbose_name_plural = verbose_name
 
+    def __str__(self):
+        return self.sku.name
+
 
 class IndexTypeGoodsBanner(BaseModel):
     '''首页分类商品展示模型类'''
@@ -90,6 +99,10 @@ class IndexTypeGoodsBanner(BaseModel):
     sku = models.ForeignKey('GoodsSKU', verbose_name='商品SKU', on_delete=models.CASCADE)
     display_type = models.SmallIntegerField(default=1, choices=DISPLAY_TYPE_CHOICES, verbose_name='展示类型')
     index = models.SmallIntegerField(default=0, verbose_name='展示顺序')
+
+    def __str__(self):
+        if self.sku:
+            return self.sku.name
 
     class Meta:
         db_table = 'df_index_type_goods'

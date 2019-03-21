@@ -4,7 +4,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView,View
 from django.conf import settings
 from apps.user.models import User, Address
 from apps.goods.models import GoodsSKU
@@ -21,7 +21,7 @@ import re
 from celery_task.tasks import send_register_active_email
 
 
-class RegisterView(TemplateView):
+class RegisterView(View):
     """注册"""
 
     def get(self, request, *args, **kwargs):
@@ -74,7 +74,7 @@ class RegisterView(TemplateView):
         return redirect(reverse('goods:index'))
 
 
-class ActiveView(TemplateView):
+class ActiveView(View):
     """激活"""
 
     def get(self, request, *args, **kwargs):
@@ -94,7 +94,7 @@ class ActiveView(TemplateView):
             return HttpResponse('激活信息已过期')
 
 
-class LoginView(TemplateView):
+class LoginView(View):
     def get(self, request, *args, **kwargs):
         if 'username' in request.COOKIES:
             username = request.COOKIES.get('username')
@@ -141,7 +141,7 @@ class LoginView(TemplateView):
             return render(request, 'login.html', {'errmsg': '用户名密码错误'})
 
 
-class LogoutView(TemplateView):
+class LogoutView(View):
     def get(self, request, *args, **kwargs):
         # logout函數清除session
         logout(request)
@@ -150,7 +150,7 @@ class LogoutView(TemplateView):
 
 # 信息管理
 # /user
-class UserInfoView(LoginRequiredMixin, TemplateView):
+class UserInfoView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         # page = 'user
         # request.user request对象自动创建实例
@@ -182,7 +182,7 @@ class UserInfoView(LoginRequiredMixin, TemplateView):
 
 # 订单管理
 # /user/order
-class UserOrderView(LoginRequiredMixin, TemplateView):
+class UserOrderView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         # 获取订单信息
 
@@ -191,7 +191,7 @@ class UserOrderView(LoginRequiredMixin, TemplateView):
 
 # 地址管理
 # /user/address
-class AddressView(LoginRequiredMixin, TemplateView):
+class AddressView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         address = Address.objects.get_default_addr(request.user)
         # 获取默认收货地址
