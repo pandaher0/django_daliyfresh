@@ -163,3 +163,12 @@ SESSION_CACHE_ALIAS = "default"
 
 # 配置登录url地址
 LOGIN_URL = '/user/login'
+
+# 设置django上传文件存储类
+DEFAULT_FILE_STORAGE = 'utils.fdfs.storage.FdfsStorage'
+
+# fastdfs Nginx访问地址
+NGINX_URL = 'http://39.106.44.166:8888/'
+
+# fastdfs配置文件路径
+CLIENT_CONF = 'conf/client.conf'
