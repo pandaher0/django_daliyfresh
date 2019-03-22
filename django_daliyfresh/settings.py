@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'apps.goods',  # 商品
     'apps.cart',  # 购物车
     'apps.order',  # 订单
+    'celery_task',
 ]
 
 MIDDLEWARE = [
@@ -150,7 +151,7 @@ EMAIL_FROM = 'python<houxj_100@163.com>'
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/9",
+        "LOCATION": "redis://39.106.44.166:6379/9",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
