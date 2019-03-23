@@ -19,6 +19,7 @@ from django.urls import path, include, re_path
 urlpatterns = [
     path('admin/', admin.site.urls),
     re_path('^tinymce/', include('tinymce.urls')),  # 富文本编辑器
+    re_path('^search',include('haystack.urls')),
     re_path('^user/', include('apps.user.urls', namespace='user')),  # 用户
     re_path('^order/', include('apps.order.urls', namespace='order')),  # 订单
     re_path('^cart/', include('apps.cart.urls', namespace='cart')),  # 购物车
