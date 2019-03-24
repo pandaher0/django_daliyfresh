@@ -79,12 +79,16 @@ class DetailView(View):
             # 获取相同spu的商品
             spu_goods = GoodsSKU.objects.filter(goods=sku.goods).exclude(id=sku.id)
 
+            conn = get_redis_connection('default')
+            cart_key = 'cart_%d' % request.user.id
+            history_key = 'history_%d' % request.user.id
+            conn.lpush(history_key,sku.id)
+
             if request.user.is_authenticated:
-                conn = get_redis_connection('default')
-                cart_key = 'cart_%d' % request.user.id
                 cart_count = conn.hlen(cart_key)
             else:
                 cart_count = 0
+
 
             context = {'sku': sku,
                        'types': types,
