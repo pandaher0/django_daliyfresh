@@ -63,8 +63,8 @@ class CartInfoView(View):
         total_count = 0
         total_price = 0
         for sku_id, count in list.items():
-            sku_id = str(sku_id,encoding='utf8')
-            count = str(count,encoding='utf8')
+            sku_id = str(sku_id, encoding='utf8')
+            count = str(count, encoding='utf8')
             sku = GoodsSKU.objects.get(id=sku_id)
             amount = sku.price * int(count)
             sku.amount = amount
@@ -73,8 +73,68 @@ class CartInfoView(View):
             total_count += int(count)
             total_price += amount
 
-        context = {'total_count':total_count,
-                   'total_price':total_price,
-                   'skus':skus}
+        context = {'total_count': total_count,
+                   'total_price': total_price,
+                   'skus': skus}
 
-        return render(request, 'cart.html',context)
+        return render(request, 'cart.html', context)
+
+
+class CartUpdateView(View):
+    def post(self, request):
+        if not request.user.is_authenticated:
+            return JsonResponse({'res': 0, 'errmsg': '请先登录'})
+        sku_id = request.POST.get('sku_id')
+        count = request.POST.get('count')
+
+        if not all([sku_id, count]):
+            return JsonResponse({'res': 1, 'errmsg': '数据不完整'})
+
+        try:
+            count = int(count)
+        except Exception as e:
+            return JsonResponse({'res': 2, 'errmsg': '数目出错'})
+
+        try:
+            sku = GoodsSKU.objects.get(id=sku_id)
+        except GoodsSKU.DoesNotExist:
+            return JsonResponse({'res': 3, 'errmsg': '商品不存在'})
+
+        cart_key = 'cart_%d' % request.user.id
+
+        conn = get_redis_connection('default')
+
+        stock = sku.stock
+        if count > stock:
+            return JsonResponse({'res': 4, 'errmsg': '库存不足'})
+
+        conn.hset(cart_key, sku_id, count)
+        total_count = 0
+        for count in conn.hgetall(cart_key).values():
+            total_count += int(count)
+
+        return JsonResponse({'res': 5, 'data': '添加成功', 'total_count': total_count})
+
+
+class CartDeleteView(View):
+    def post(self, request):
+        if not request.user.is_authenticated:
+            return JsonResponse({'res': 0, 'errmsg': '请先登录'})
+        sku_id = request.POST.get('sku_id')
+
+        if not sku_id:
+            return JsonResponse({'res': 1, 'errmsg': '数据不完整'})
+        try:
+            sku = GoodsSKU.objects.get(id=sku_id)
+        except GoodsSKU.DoesNotExist:
+            return JsonResponse({'res': 2, 'errmsg': '商品不存在'})
+
+        cart_key = 'cart_%d' % request.user.id
+        conn = get_redis_connection('default')
+        conn.hdel(cart_key, sku_id)
+
+        total_count = 0
+        for count in conn.hgetall(cart_key).values():
+            total_count += int(count)
+
+        return JsonResponse({'res': 3, 'data': '删除成功', 'total_count': total_count})

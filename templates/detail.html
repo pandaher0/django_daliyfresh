@@ -113,14 +113,14 @@
         // 增加商品的数量
         $('.add').click(function () {
             // 获取商品原有的数目
-            count = $('.num_show').val()
+            count = $('.num_show').val();
             // 加1
-            count = parseInt(count) + 1
+            count = parseInt(count) + 1;
             // 重新设置商品的数目
-            $('.num_show').val(count)
+            $('.num_show').val(count);
             // 更新商品的总价
             update_goods_amount()
-        })
+        });
 
         // 减少商品的数量
         $('.minus').click(function () {
