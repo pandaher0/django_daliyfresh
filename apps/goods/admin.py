@@ -1,6 +1,6 @@
 from django.contrib import admin
 from apps.goods.models import GoodsType, IndexGoodsBanner, IndexPromotionBanner, IndexTypeGoodsBanner, GoodsSKU
-from celery_task.tasks import generate_static_index_html
+# from celery_task.tasks import generate_static_index_html
 from django.core.cache import cache
 
 
@@ -8,13 +8,13 @@ from django.core.cache import cache
 class BaseModelAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
-        generate_static_index_html.delay()
+        # generate_static_index_html.delay()
         # 清除缓存
         cache.delete('index_page_data')
 
     def delete_model(self, request, obj):
         super().delete_model(request, obj)
-        generate_static_index_html.delay()
+        # generate_static_index_html.delay()
         # 清除缓存
         cache.delete('index_page_data')
 

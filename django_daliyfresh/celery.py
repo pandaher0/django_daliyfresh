@@ -12,7 +12,7 @@ app = Celery("celery_task.tasks")
 # 配置应用
 app.conf.update(
     # 配置broker, 这里我们用redis作为broker
-    BROKER_URL='redis://127.0.0.1:6379/8',
+    BROKER_URL='redis://39.106.44.166:6379/8',
 )
 # 设置app自动加载任务
 # 从已经安装的app中查找任务

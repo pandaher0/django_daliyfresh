@@ -97,7 +97,7 @@
 
             $.post('/order/commit', params, function (data) {
                 if (data.res == '5') {
-                    alert('创建成功')
+                    {#alert('创建成功')#}
                 }
                 else {
                     alert(data.errmsg)
@@ -106,17 +106,17 @@
             });
 
 
-            {#localStorage.setItem('order_finish', 2);#}
-            {##}
-            {#$('.popup_con').fadeIn('fast', function () {#}
-            {##}
-            {#    setTimeout(function () {#}
-            {#        $('.popup_con').fadeOut('fast', function () {#}
-            {#            window.location.href = 'index.html';#}
-            {#        });#}
-            {#    }, 3000)#}
-            {##}
-            {# });#}
+            localStorage.setItem('order_finish', 2);
+
+            $('.popup_con').fadeIn('fast', function () {
+
+                setTimeout(function () {
+                    $('.popup_con').fadeOut('fast', function () {
+                        window.location.href = '/user/order/1';
+                    });
+                }, 3000)
+
+             });
         });
     </script>
 {% endblock bottom_files %}
